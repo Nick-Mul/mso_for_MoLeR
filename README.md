@@ -13,7 +13,7 @@ conda activate moler-env
 pip install molecule-generation
 ```
 
-The package is installed into the moler-env conda enviroment with as mso
+The install this modification of winter's mso into the moler-env conda enviroment with as mso
 ```
 git clone mso_for_MoLeR
 cd mso_for_MoLeR
