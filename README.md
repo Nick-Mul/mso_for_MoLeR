@@ -42,11 +42,9 @@ embedding = inference_model.seq_to_emb([init_smiles])
 print(embedding)
 print(embedding[0].shape[0])
 
-#error BasePSOptimizer not callable ??! for class method?! BasePSOptimizer.from_query. 
-#opt = BasePSOptimizer(init_smiles=init_smiles,num_part=200,num_swarms=1,inference_model=inference_model,scoring_functions=scoring_functions)
 opt = BasePSOptimizer.from_query(init_smiles=init_smiles,num_part=200,num_swarms=1,inference_model=inference_model,scoring_functions=scoring_functions)
 
-opt(20)
+opt.run(20)
 
 
 inference_model.__exit__(None, None, None)
