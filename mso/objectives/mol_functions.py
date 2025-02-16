@@ -11,6 +11,10 @@ from rdkit import Chem
 from rdkit.Chem import Descriptors, AllChem
 from rdkit.Chem.Descriptors import qed, MolLogP
 from rdkit import DataStructs
+import requests
+from rdkit.Chem.rdMolDescriptors import CalcExactMolWt, CalcNumAromaticRings, CalcMolFormula, CalcNumRotatableBonds
+import re
+from difflib import SequenceMatcher
 
 
 smarts = pd.read_csv(os.path.join(data_dir, "sure_chembl_alerts.txt"), header=None, sep='\t')[1].tolist()
@@ -38,7 +42,7 @@ def qed_score(mol):
     :return: score
     """
     try:
-        score = qed(mol)
+        score = QED(mol)
     except :
         score = 0
     return score
@@ -81,16 +85,6 @@ def substructure_match_score(mol, query, kind="any"):
         score = 0
     return score
 
-@check_valid_mol
-def sa_score(mol):
-    """
-    Synthetic acceptability score as proposed by Ertel et al..
-    """
-    try:
-        score = sascorer.calculateScore(mol)
-    except:
-        score = 0
-    return score
 
 @check_valid_mol
 def logp_score(mol):
@@ -99,14 +93,6 @@ def logp_score(mol):
     """
     score = Chem.Crippen.MolLogP(mol)
     return score
-
-@check_valid_mol
-def penalized_logp_score(mol, alpha=1):
-    """
-    penalized logP score as defined by .
-    """
-    score = reward_penalized_log_p(mol)
-    return alpha * score
 
 @check_valid_mol
 def heavy_atom_count(mol):
@@ -136,6 +122,7 @@ def penalize_long_aliphatic_chains(mol, min_members):
         score = 1
     return score
 
+
 @check_valid_mol
 def penalize_macrocycles(mol):
     """ 0 for molecules with macrocycles."""
@@ -158,60 +145,8 @@ def tox_alert(mol):
         score = 1
     return score
 
-try:
-    import cdddswarm.data.sascorer
-    import networkx as nx
-    @check_valid_mol
-    def reward_penalized_log_p(mol):
-        """
-        Reward that consists of log p penalized by SA and # long cycles,
-        as described in (Kusner et al. 2017). Scores are normalized based on the
-        statistics of 250k_rndm_zinc_drugs_clean.smi dataset
-        Code taken from implementation of:
-        You, Jiaxuan, et al. "Graph Convolutional Policy Network for Goal-Directed
-        Molecular Graph Generation." arXiv preprint arXiv:1806.02473 (2018).
-        https://github.com/bowenliu16/rl_graph_generation
-        """
-        # normalization constants, statistics from 250k_rndm_zinc_drugs_clean.smi
-        logP_mean = 2.4570953396190123
-        logP_std = 1.434324401111988
-        SA_mean = -3.0525811293166134
-        SA_std = 0.8335207024513095
-        cycle_mean = -0.0485696876403053
-        cycle_std = 0.2860212110245455
-
-        try:
-            log_p = MolLogP(mol)
-        except ValueError:
-            return 0
-        try:
-            SA = -sascorer.calculateScore(mol)
-        except ZeroDivisionError:
-            return 0
-
-        # cycle score
-        cycle_list = nx.cycle_basis(nx.Graph(
-            Chem.rdmolops.GetAdjacencyMatrix(mol)))
-        if len(cycle_list) == 0:
-            cycle_length = 0
-        else:
-            cycle_length = max([len(j) for j in cycle_list])
-        if cycle_length <= 6:
-            cycle_length = 0
-        else:
-            cycle_length = cycle_length - 6
-        cycle_score = -cycle_length
-
-        normalized_log_p = (log_p - logP_mean) / logP_std
-        normalized_SA = (SA - SA_mean) / SA_std
-        normalized_cycle = (cycle_score - cycle_mean) / cycle_std
-
-        return normalized_log_p + normalized_SA + normalized_cycle
-except:
-    warnings.warn("failed to load reward_penalized_log_p score. Consider installing package networkx")
-    reward_penalized_log_p = None
-
 fps = np.load(os.path.join(data_dir, "chembl_fps.npy"), allow_pickle=True).item()
+
 @check_valid_mol
 def has_chembl_substruct(mol):
     """0 for molecuels with substructures (ECFP2 that occur less often than 5 times in ChEMBL."""
@@ -220,3 +155,14 @@ def has_chembl_substruct(mol):
         return 0
     else:
         return 1
+    
+@check_valid_mol
+def number_of_aromatic(mol):
+    return CalcNumAromaticRings(mol)
+
+@check_valid_mol
+def number_of_rot_bonds(mol):
+    return CalcNumRotatableBonds(mol)
+
+
+

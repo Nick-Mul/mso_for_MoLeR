@@ -4,13 +4,14 @@ Module that defines the Swarm class used by the Particle Swarm Optimizer.
 import random
 import numpy as np
 
+
 class Swarm:
     """
     Class that defines a Swarm that can be optimized by a PSOptimizer. Most PSO calculations are
     done in here.
     """
-    def __init__(self, smiles, x, v, x_min=-10., x_max=10.,
-                 inertia_weight=0.9, phi1=2., phi2=2., phi3=2.):
+    def __init__(self, smiles, x, v, x_min, x_max,
+                 inertia_weight=0.9, phi1=2., phi2=2., phi3=2., scaffold=None):
         """
         :param smiles: The SMILES that define the molecules at the positions of the particles of
             the swarm.
@@ -39,8 +40,8 @@ class Swarm:
         self.phi1 = phi1
         self.phi2 = phi2
         self.phi3 = phi3
-        self.num_part = len(smiles)
-
+        self.num_part = len(smiles) # can cause problems?
+        self.scaffold = scaffold
         self.unscaled_scores = {}
         self.scaled_scores = {}
         self.desirability_scores = {}
@@ -51,6 +52,9 @@ class Swarm:
         self.swarm_best_fitness = 0
         self.particle_best_fitness = self.fitness
         self.best_smiles = self.smiles[0]
+        self.hyperparams_norm_max = 10
+        #self.hyperparams.norm_max ??
+
 
     def next_step(self):
         """
@@ -60,12 +64,23 @@ class Swarm:
         u1 = np.random.uniform(0, self.phi1, [self.num_part, 1])
         u2 = np.random.uniform(0, self.phi2, [self.num_part, 1])
         u3 = np.random.uniform(0, self.phi3, [self.num_part, 1])
-        v_u1 = u1 * (self.particle_best_x - self.x)
-        v_u2 = u2 * (self.swarm_best_x - self.x)
-        v_u3 = u3 * (np.array(random.choice(self.history_swarm_best_x)) - self.x)
+        v_u1 = u1 * (self.particle_best_x - self.x) #cognitive factor 
+        v_u2 = u2 * (self.swarm_best_x - self.x) # social factor
+        v_u3 = u3 * (np.array(random.choice(self.history_swarm_best_x)) - self.x) # across swarms exchange
         self.v = self.inertia_weight * self.v + v_u1 + v_u2 + v_u3
         self.x += self.v
-        self.x = np.clip(self.x, self.x_min, self.x_max)
+        self.x = np.clip(self.x, self.x_min, self.x_max).astype('float32') #boundary as hypercube not hypersphere
+        
+        """
+        if self.hyperparams.norm_max is not None:
+        for x in self.x:
+        x_norm = np.linalg.norm(x)
+
+        if x_norm > self.hyperparams.norm_max:
+            x *= self.hyperparams.norm_max / x_norm
+
+
+        """
 
     def update_fitness(self, fitness):
         """
@@ -99,15 +114,14 @@ class Swarm:
                                                                     self.swarm_best_fitness)
 
     @classmethod
-    def from_dict(cls, dictionary, x_min=-10., x_max=10.,
+    def from_dict(cls, dictionary, x_min, x_max,
                  inertia_weight=0.9, phi1=2., phi2=2., phi3=2.):
         """
         Classmethod to create a Swarm instance from a dictionary. Can be used to reinitialize a
         Swarm with all important properties.
         :param dictionary: Dictionary with swarm parameters.
-        :param x_min: min bound of the optimization space
-        :param x_max: max bound of the optimization space
-            CDDD embeddings take values between -1 and 1.
+        :param x_min: min bound of the optimization space, this is taken from .dat file generated from post processing the model
+        :param x_max: max bound of the optimization space, this is taken from .dat file generated from post processing the model
         :param inertia_weight: PSO hyperparamter.
         :param phi1: PSO hyperparamter.
         :param phi2: PSO hyperparamter.
