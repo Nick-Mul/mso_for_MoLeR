@@ -3,9 +3,8 @@ Modified Molecular Swarm Optimization (MSO) using MoLeR
 
 
 
-This is a modifiation of Molecular Swarm optimisation (MSO) by Winter et al.,[1] to use the MoLeR model introduced in the paper "Learning to Extend Molecular Scaffolds with Structural Motifs" by Maziarz et al., [2] These modifications are described in appendix C of the paper.
-
-install moler as described in their git
+This is a modifiation of Molecular Swarm optimisation (MSO),1 to use the the MoLeR model introduced in Learning to Extend Molecular Scaffolds with Structural Motifs. 
+These modifications are described in appendix C of the paper.
 
 ```
 conda env create -f environment.yml
@@ -13,42 +12,11 @@ conda activate moler-env
 pip install molecule-generation
 ```
 
-The install this modification of winter's mso into the moler-env conda enviroment with as mso
+The package is install intsalled into the moler-env conda enviroment with 
 ```
 git clone mso_for_MoLeR
 cd mso_for_MoLeR
 pip install -e .
-```
-Pretty much identical to Winter's example expect we using the MoLeR inference server.
-
-```from numpy import append
-import sys
-import pandas as pd
-from mso.optimizer import BasePSOptimizer
-from mso.objectives.scoring import ScoringFunction
-from mso.objectives.mol_functions import qed_score
-from mso.moler_inference_server import _get_model_file, Inference_server
-
-
-init_smiles = "OC(=O)C1=CC=CC=C1" # SMILES representation
-scoring_functions = [ScoringFunction(func=qed_score, name="qed", is_mol_func=True)]
-
-model_dir = _get_model_file(sys.argv[1])
-
-print(model_dir)
-inference_model = Inference_server(model_dir)
-inference_model.__enter__()
-embedding = inference_model.seq_to_emb([init_smiles])
-print(embedding)
-print(embedding[0].shape[0])
-
-opt = BasePSOptimizer.from_query(init_smiles=init_smiles,num_part=200,num_swarms=1,inference_model=inference_model,scoring_functions=scoring_functions)
-
-opt.run(20)
-
-
-inference_model.__exit__(None, None, None)
-inference_model.__del__()
 ```
 
 
