@@ -3,9 +3,9 @@ Modified Molecular Swarm Optimization (MSO) using MoLeR
 
 
 
-This is a modifiation of Molecular Swarm optimisation (MSO),1 to use the the MoLeR model introduced in Learning to Extend Molecular Scaffolds with Structural Motifs. 
-These modifications are described in appendix C of the paper.
+This is a modifiation of Molecular Swarm optimisation (MSO), by Robin Winter et al. https://pubs.rsc.org/en/content/articlelanding/2019/SC/C9SC01928F#!divAbstract to guide a MoLeR model introduced in Learning to Extend Molecular Scaffolds with Structural Motifs. 
 
+Install
 ```
 conda env create -f environment.yml
 conda activate moler-env
