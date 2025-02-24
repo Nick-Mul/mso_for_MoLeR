@@ -2,8 +2,8 @@ from setuptools import setup
 
 setup(
     name='mso',
-    version='0.8',
-    packages=['mso', 'mso.data', 'mso.objectives'],
+    version='1.0',
+    packages=['mso', 'mso.data', 'mso.objectives','mso.utils'],
     url='',
     license='',
     author='Robin Winter; N Mulholland',

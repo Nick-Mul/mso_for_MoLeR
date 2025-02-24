@@ -8,7 +8,7 @@ import multiprocessing as mp
 import pandas as pd
 from rdkit import Chem, rdBase
 from mso.swarm import Swarm
-from mso.util import canonicalize_smiles
+from mso.utils import canonicalize_smiles
 rdBase.DisableLog('rdApp.error')
 logging.getLogger('tensorflow').disabled = True
 from scipy.interpolate  import splrep
